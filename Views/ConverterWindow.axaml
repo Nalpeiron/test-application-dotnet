@@ -1,0 +1,193 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm="using:ZentitleOnPremDemo.ViewModels"
+             xmlns:mo="using:ZentitleOnPremDemo.Models"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             x:Class="ZentitleOnPremDemo.Views.ConverterWindow">
+  <Design.DataContext>
+    <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+    <vm:ConverterViewModel/>
+  </Design.DataContext>
+  <UserControl.Styles>
+    <Style Selector="Button.selected">
+      <Setter Property="Background" Value="#0078D7"/>
+      <Setter Property="Foreground" Value="White"/>
+    </Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#429CE3" />
+      <Setter Property="TextBlock.Foreground" Value="White" />
+    </Style>
+  </UserControl.Styles>
+  <Grid IsEnabled="{Binding !!ConsumptionTokens}">
+    <Grid Margin="10">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="330" />
+      </Grid.ColumnDefinitions>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="320" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+      <StackPanel Grid.Column="0" Grid.Row="0">
+        <Grid>
+          <TextBlock VerticalAlignment="Center" FontSize="16" FontWeight="DemiBold" Text="Sources " />
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,2">
+            <Button IsEnabled="{Binding !IsProcessing}" Classes="round" Width="85" Command="{Binding AddFile}" Margin="0,0,3,0">Add File</Button>
+            <Button IsEnabled="{Binding !IsProcessing}" Classes="round" Width="85" Command="{Binding RemoveFile}">Remove</Button>
+          </StackPanel>
+        </Grid>
+        <ListBox Height="200"
+                 Items="{Binding Sources}" SelectedIndex="{Binding SourcesSelectedIndex}">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Text}" ToolTip.Tip="{Binding ToolTip}" />
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock FontSize="16" FontWeight="DemiBold" Margin="0,10,0,10" Text="Destination Folder" />
+        <Grid IsEnabled="{Binding !IsProcessing}">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <TextBox Grid.Column="0" Text="{Binding Destination}" />
+          <Button Classes="round" Grid.Column="1" Width="35">
+            <ic:SymbolIcon Symbol="FolderOpenVertical" FontSize="20" />
+          </Button>
+        </Grid>
+      </StackPanel>
+      <Grid Grid.Column="0" Grid.Row="1" Margin="0,20,0,0">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock FontSize="16" FontWeight="DemiBold" Text="Processing" />
+        </StackPanel>
+        <ScrollViewer Margin="0,30,0,0" Background="WhiteSmoke" Height="200">
+          <ItemsRepeater Items="{Binding ProcessingFiles}" Grid.IsSharedSizeScope="True">
+            <ItemsRepeater.ItemTemplate>
+              <DataTemplate DataType="{x:Type mo:ProcessingItem}">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition SharedSizeGroup="ProcessingCol1" Width="*" />
+                    <ColumnDefinition SharedSizeGroup="ProcessingCol2" Width="120" />
+                    <ColumnDefinition SharedSizeGroup="ProcessingCol3" Width="8" />
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Grid.Column="0" Height="24" Padding="0,2,0,0" Text="{Binding Text}" Margin="4" />
+                  <ProgressBar Grid.Column="1" Margin="4" Value="{Binding ProgressPercent, Mode=OneWay}"
+                               Maximum="1" Height="24" Background="Transparent" MinWidth="0"
+                               Foreground="#0078d7" />
+                  <TextBlock Grid.Column="1" Height="24" Padding="2,2,0,0" Text="{Binding Status, Mode=OneWay}"
+                             VerticalAlignment="Center" Margin="4" />
+                  <Grid Column="2" MinWidth="8" />
+                </Grid>
+              </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+          </ItemsRepeater>
+        </ScrollViewer>
+      </Grid>
+      <Grid Grid.Column="1" Grid.Row="0" Margin="20,0,0,0">
+        <StackPanel IsEnabled="{Binding !IsProcessing}">
+          <StackPanel>
+            <TextBlock FontSize="16" Margin="0,0,0,10" FontWeight="DemiBold" Text="Settings"></TextBlock>
+          </StackPanel>
+
+          <Grid Margin="0,2,0,2">
+            <TextBlock Text="Output Format" VerticalAlignment="Center" Margin="0,0,0,5" />
+            <ItemsControl Items="{Binding FormatsList}" HorizontalAlignment="Right" Width="195">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Panel>
+                    <ToolTip IsVisible="{Binding !Enabled}">
+                      <ToolTip.Tip>
+                        <TextBlock>Upgrade to use these feature</TextBlock>
+                      </ToolTip.Tip>
+                    </ToolTip>
+                    <Button Width="65"
+                            Command="{Binding $parent[ItemsControl].DataContext.SelectFormat}"
+                            CommandParameter="{Binding Value}"
+                            Classes.selected="{Binding Selected}"
+                            Content="{Binding Text}"
+                            IsEnabled="{Binding Enabled}">
+                    </Button>
+                  </Panel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Grid>
+          <Grid Margin="0,2,0,2">
+            <TextBlock VerticalAlignment="Center" Text="Bitrate" />
+            <ComboBox HorizontalAlignment="Right" Width="100"
+                      Items="{Binding BitrateList}" SelectedItem="{Binding BitrateList.CurrentItem}">
+            </ComboBox>
+          </Grid>
+          <Grid Margin="0,2,0,2">
+            <TextBlock VerticalAlignment="Center" Text="Bits Per Sample" />
+            <ComboBox HorizontalAlignment="Right" Width="100"
+                      Items="{Binding BitsPerSampleList}" SelectedItem="{Binding BitsPerSampleList.CurrentItem}">
+            </ComboBox>
+          </Grid>
+          <Grid Margin="0,2,0,2">
+            <TextBlock VerticalAlignment="Center" Text="Sample rate" />
+            <ComboBox HorizontalAlignment="Right" Width="115"
+                      Items="{Binding SampleRateList}" SelectedItem="{Binding SampleRateList.CurrentItem}">
+            </ComboBox>
+          </Grid>
+          <Grid Margin="0,2,0,2">
+            <TextBlock VerticalAlignment="Center" Text="Threads" />
+            <ComboBox HorizontalAlignment="Right" Width="115"
+                      Items="{Binding ThreadsList}" SelectedItem="{Binding ThreadSelection}">
+            </ComboBox>
+          </Grid>
+          <Grid Margin="0,2,0,2" Height="54">
+            <Grid>
+              <TextBlock VerticalAlignment="Center" Text="Speed" />
+              <Slider HorizontalAlignment="Center" Width="110" Minimum="1" Maximum="30"
+                      TickFrequency="5" TickPlacement="TopLeft" IsSnapToTickEnabled="True" Value="{Binding Quality}">
+              </Slider>
+              <TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Text="Quality" />
+            </Grid>
+          </Grid>
+          <Button Classes="round" Width="100" HorizontalAlignment="Center" Margin="0,5">
+            Advanced
+          </Button>
+        </StackPanel>
+      </Grid>
+      <Grid Grid.Column="1" Grid.Row="1" Margin="10,0,0,0">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+          <TextBlock TextWrapping="Wrap" Width="120" TextAlignment="Center"
+                     Text="When destination file exists" />
+          <ComboBox Margin="0,4,0,25" HorizontalAlignment="Center"
+                    Items="{Binding FileExistsActionList}"
+                    SelectedItem="{Binding FileExistsActionList.CurrentItem, Mode=TwoWay}">
+          </ComboBox>
+          <Button Classes="round" Width="120" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                  Command="{Binding StartEncoding}" IsVisible="{Binding !IsProcessing}">
+            Start Encoding
+          </Button>
+          <Button Classes="round" Width="120" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                  Command="{Binding StartEncoding}" IsVisible="{Binding IsStopped}">
+            Continue
+          </Button>
+          <Button Classes="round" Width="120" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                Command="{Binding StopEncoding}">
+            <Button.IsVisible>
+              <MultiBinding Converter="{x:Static BoolConverters.And}">
+                <Binding Path="IsProcessing"/>
+                <Binding Path="!IsStopped"/>
+              </MultiBinding>
+            </Button.IsVisible>
+            Stop
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Grid>
+  </Grid>
+</UserControl>

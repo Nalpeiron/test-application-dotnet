@@ -1,0 +1,49 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:ZentitleOnPremDemo.ViewModels"
+        xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+        mc:Ignorable="d" d:DesignWidth="320" d:DesignHeight="135"
+        Width="320" Height="135"
+        x:Class="ZentitleOnPremDemo.Views.MessageBoxWindow"
+        Title="ActivationWindow"
+        Background="White"
+        TransparencyLevelHint="AcrylicBlur"
+        SystemDecorations="None"
+        Topmost="True"
+        WindowStartupLocation="CenterOwner">
+  <Design.DataContext>
+    <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+    <vm:ActivationViewModel/>
+  </Design.DataContext>
+  <Window.Styles>
+    <Style Selector="Button.main">
+      <Setter Property="Background" Value="#0078D7"/>
+      <Setter Property="Foreground" Value="White"/>
+    </Style>
+    <Style Selector="Button.main:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#429CE3" />
+      <Setter Property="TextBlock.Foreground" Value="White" />
+    </Style>
+  </Window.Styles>
+  <Panel>
+    <ExperimentalAcrylicBorder IsHitTestVisible="False">
+      <ExperimentalAcrylicBorder.Material>
+        <ExperimentalAcrylicMaterial
+            BackgroundSource="Digger"
+            TintColor="White"
+            TintOpacity="1"
+            MaterialOpacity="0.65" />
+      </ExperimentalAcrylicBorder.Material>
+    </ExperimentalAcrylicBorder>
+    <StackPanel>
+      <TextBlock Margin="15,15,15,20" Text="{Binding Message}" TextWrapping="Wrap"></TextBlock>
+      <WrapPanel HorizontalAlignment="Center">
+        <Button Classes="main" IsVisible="{Binding OkButton}" Command="{Binding Ok}" Margin="5,0,5,0">OK</Button>
+        <Button IsVisible="{Binding CancelButton}" Command="{Binding Cancel}" Margin="5,0,5,0">Cancel</Button>
+      </WrapPanel>
+    </StackPanel>
+  </Panel>
+</Window>
