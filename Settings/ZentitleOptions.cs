@@ -10,6 +10,7 @@ public static class ZentitleOptions
     public static string ProductId => ConfigurationManager.AppSettings["ProductId"] ?? string.Empty;
     public static string TenantId => ConfigurationManager.AppSettings["TenantId"] ?? string.Empty;
     public static string ZentitleUrl => ConfigurationManager.AppSettings[ZentitleUrlKey] ?? string.Empty;
+    public static string TenantPublicKey => ConfigurationManager.AppSettings["TenantPublicKey"] ?? string.Empty;
 
     public static bool UpdateZentitleUrl(string url)
     {

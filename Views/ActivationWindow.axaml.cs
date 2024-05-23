@@ -1,8 +1,12 @@
+using Auth0.OidcClient;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using ReactiveUI;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Zentitle.Licensing.Client;
+using Zentitle.Licensing.Client.Api;
 using ZentitleOnPremDemo.ViewModels;
 
 namespace ZentitleOnPremDemo.Views
@@ -21,11 +25,15 @@ namespace ZentitleOnPremDemo.Views
         {
             try
             {
-                ViewModel!.ErrorMessage = String.Empty;
+                ViewModel!.ErrorMessage = string.Empty;
                 ViewModel.Loading = true;
 
-                await Zentitle.Instance.Activation.Activate(result!);
+                await Zentitle.Instance.Activation.ActivateWithCode(result);
                 ViewModel!.SuccessMessage = "Activation Successful";
+            }
+            catch (LicensingApiException<ApiError> ex)
+            {
+                ViewModel!.ErrorMessage = ex.Result.Details;
             }
             catch
             {

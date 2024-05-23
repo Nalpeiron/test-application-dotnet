@@ -22,7 +22,7 @@
       <Setter Property="TextBlock.Foreground" Value="White" />
     </Style>
   </UserControl.Styles>
-  <Grid IsEnabled="{Binding !!ConsumptionTokens}">
+  <Grid IsEnabled="{Binding Activated}">
     <Grid Margin="10">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*" />
@@ -41,7 +41,7 @@
           </StackPanel>
         </Grid>
         <ListBox Height="200"
-                 Items="{Binding Sources}" SelectedIndex="{Binding SourcesSelectedIndex}">
+                 ItemsSource="{Binding Sources}" SelectedIndex="{Binding SourcesSelectedIndex}">
           <ListBox.ItemTemplate>
             <DataTemplate>
               <TextBlock Text="{Binding Text}" ToolTip.Tip="{Binding ToolTip}" />
@@ -65,7 +65,7 @@
           <TextBlock FontSize="16" FontWeight="DemiBold" Text="Processing" />
         </StackPanel>
         <ScrollViewer Margin="0,30,0,0" Background="WhiteSmoke" Height="200">
-          <ItemsRepeater Items="{Binding ProcessingFiles}" Grid.IsSharedSizeScope="True">
+          <ItemsRepeater ItemsSource="{Binding ProcessingFiles}" Grid.IsSharedSizeScope="True">
             <ItemsRepeater.ItemTemplate>
               <DataTemplate DataType="{x:Type mo:ProcessingItem}">
                 <Grid>
@@ -95,7 +95,7 @@
 
           <Grid Margin="0,2,0,2">
             <TextBlock Text="Output Format" VerticalAlignment="Center" Margin="0,0,0,5" />
-            <ItemsControl Items="{Binding FormatsList}" HorizontalAlignment="Right" Width="195">
+            <ItemsControl ItemsSource="{Binding FormatsList}" HorizontalAlignment="Right" Width="195">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                   <WrapPanel />
@@ -125,25 +125,25 @@
           <Grid Margin="0,2,0,2">
             <TextBlock VerticalAlignment="Center" Text="Bitrate" />
             <ComboBox HorizontalAlignment="Right" Width="100"
-                      Items="{Binding BitrateList}" SelectedItem="{Binding BitrateList.CurrentItem}">
+                      ItemsSource="{Binding BitrateList}" SelectedItem="{Binding BitrateList.CurrentItem}">
             </ComboBox>
           </Grid>
           <Grid Margin="0,2,0,2">
             <TextBlock VerticalAlignment="Center" Text="Bits Per Sample" />
             <ComboBox HorizontalAlignment="Right" Width="100"
-                      Items="{Binding BitsPerSampleList}" SelectedItem="{Binding BitsPerSampleList.CurrentItem}">
+                      ItemsSource="{Binding BitsPerSampleList}" SelectedItem="{Binding BitsPerSampleList.CurrentItem}">
             </ComboBox>
           </Grid>
           <Grid Margin="0,2,0,2">
             <TextBlock VerticalAlignment="Center" Text="Sample rate" />
             <ComboBox HorizontalAlignment="Right" Width="115"
-                      Items="{Binding SampleRateList}" SelectedItem="{Binding SampleRateList.CurrentItem}">
+                      ItemsSource="{Binding SampleRateList}" SelectedItem="{Binding SampleRateList.CurrentItem}">
             </ComboBox>
           </Grid>
           <Grid Margin="0,2,0,2">
             <TextBlock VerticalAlignment="Center" Text="Threads" />
             <ComboBox HorizontalAlignment="Right" Width="115"
-                      Items="{Binding ThreadsList}" SelectedItem="{Binding ThreadSelection}">
+                      ItemsSource="{Binding ThreadsList}" SelectedItem="{Binding ThreadSelection}">
             </ComboBox>
           </Grid>
           <Grid Margin="0,2,0,2" Height="54">
@@ -165,11 +165,12 @@
           <TextBlock TextWrapping="Wrap" Width="120" TextAlignment="Center"
                      Text="When destination file exists" />
           <ComboBox Margin="0,4,0,25" HorizontalAlignment="Center"
-                    Items="{Binding FileExistsActionList}"
+                    ItemsSource="{Binding FileExistsActionList}"
                     SelectedItem="{Binding FileExistsActionList.CurrentItem, Mode=TwoWay}">
           </ComboBox>
           <Button Classes="round" Width="120" HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                  Command="{Binding StartEncoding}" IsVisible="{Binding !IsProcessing}">
+                  Command="{Binding StartEncoding}" IsVisible="{Binding !IsProcessing}"
+                  IsEnabled="{ Binding ProcessingEnabled}">
             Start Encoding
           </Button>
           <Button Classes="round" Width="120" HorizontalAlignment="Center" VerticalAlignment="Bottom"

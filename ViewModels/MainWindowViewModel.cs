@@ -1,9 +1,14 @@
 ﻿using System;
+using System.Reactive.Concurrency;
 using ReactiveUI;
 using System.Reactive.Linq;
+
 using System.Windows.Input;
-using Zentitle.Licensing.Client.States;
 using ZentitleOnPremDemo.Models;
+using Auth0.OidcClient;
+using Zentitle.Licensing.Client;
+using Zentitle.Licensing.Client.Api;
+using ZentitleOnPremDemo.Settings;
 
 namespace ZentitleOnPremDemo.ViewModels;
 
@@ -13,72 +18,173 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand ShowLicense { get; }
     public ICommand Deactivate { get; }
     public ICommand SetActivationCode { get; }
+    public ICommand IdpLogin { get; }
+    public ICommand UserLogin { get; }
     public ICommand EditConfiguration { get; }
-    public Interaction<ActivationViewModel, BoolResult> ShowDialog { get; }
+    public ICommand DeactivateOffline { get; }
+    public ICommand ActivateOffline { get; }
+    public Interaction<ActivationViewModel, BoolResult> ShowActivationCodeDialog { get; }
+    public Interaction<IdpActivationViewModel, BoolResult> ShowIdpLoginDialog { get; }
+    public Interaction<UserLoginViewModel, BoolResult> ShowUserLoginDialog { get; }
     public Interaction<ConfigurationViewModel, BoolResult> ShowConfigurationForm { get; }
-    private bool _activated = false;
-    private LicenseWindowViewModel _licenseWindowViewModel;
+    public Interaction<OfflineActivationViewModel, BoolResult> ShowOfflineActivationDialog { get; }
+    public Interaction<OfflineDeactivationViewModel, BoolResult> ShowOfflineDeactivationDialog { get; }
+    private bool _activated;
+    private bool _offline;
+    private bool _online;
+    private LicenseWindowViewModel? _licenseWindowViewModel;
     private ConverterViewModel _converterViewModel;
-    private string _companyName;
-    private string _planName;
+    private string? _companyName;
+    private string? _planName;
     private DateTime? _expiryDate;
+    private string? _activationModeText;
 
     public MainWindowViewModel()
     {
-        ShowDialog = new Interaction<ActivationViewModel, BoolResult>();
+        ShowActivationCodeDialog = new Interaction<ActivationViewModel, BoolResult>();
+        ShowUserLoginDialog = new Interaction<UserLoginViewModel, BoolResult>();
+        ShowIdpLoginDialog = new Interaction<IdpActivationViewModel, BoolResult>();
         ShowConfigurationForm = new Interaction<ConfigurationViewModel, BoolResult>();
+        ShowOfflineDeactivationDialog = new Interaction<OfflineDeactivationViewModel, BoolResult>();
+        ShowOfflineActivationDialog = new Interaction<OfflineActivationViewModel, BoolResult>();
 
-        ConverterViewModel = new ConverterViewModel();
+        _converterViewModel = new ConverterViewModel();
+
+        DeactivateOffline = ReactiveCommand.CreateFromTask(async () =>
+        {
+            var store = new OfflineDeactivationViewModel();
+
+            var result = await ShowOfflineDeactivationDialog.Handle(store);
+
+            if (result is { Success: true })
+            {
+                await LoadLicenseData();
+            }
+        });
+
+        ActivateOffline = ReactiveCommand.CreateFromTask(async () =>
+        {
+            var store = new OfflineActivationViewModel();
+
+            var result = await ShowOfflineActivationDialog.Handle(store);
+
+            if (result is { Success: true })
+            {
+                await LoadLicenseData();
+            }
+        });
 
         SetActivationCode = ReactiveCommand.CreateFromTask(async () =>
         {
             var store = new ActivationViewModel();
 
-            var result = await ShowDialog.Handle(store);
+            var result = await ShowActivationCodeDialog.Handle(store);
 
             if (result is { Success: true })
             {
-                LoadLicenseData();
+                await LoadLicenseData();
             }
+        });
+
+        UserLogin = ReactiveCommand.CreateFromTask(async () =>
+        {
+            var store = new UserLoginViewModel();
+
+            var result = await ShowUserLoginDialog.Handle(store);
+
+            if (result is { Success: true })
+            {
+                await LoadLicenseData();
+            }
+        });
+
+        IdpLogin = ReactiveCommand.CreateFromTask(async () =>
+        {
+            var store = new IdpActivationViewModel();
+            var auth0Client = new Auth0Client(new Auth0ClientOptions
+            {
+                Domain = Auth0Options.Domain,
+                ClientId = Auth0Options.ClientId
+            });
+
+            try
+            {
+                var auth0Result = await auth0Client.LoginAsync();
+                if (auth0Result.Error == null)
+                {
+                    store.Token = auth0Result.IdentityToken;
+                    await auth0Client.LogoutAsync();
+                }
+                else
+                {
+                    store.ErrorMessage = $"Login failed '{auth0Result.Error}'";
+                }
+            }
+            catch(Exception ex)
+            {
+                store.ErrorMessage = ex.Message;
+            }
+
+            var result = await ShowIdpLoginDialog.Handle(store);
+            if (result is { Success: true })
+            {
+                await LoadLicenseData();
+            }
+
         });
 
         EditConfiguration = ReactiveCommand.CreateFromTask(async () =>
         {
             var store = new ConfigurationViewModel();
 
-            var result = await ShowConfigurationForm.Handle(store);
+            await ShowConfigurationForm.Handle(store);
         });
 
         ShowLicense = ReactiveCommand.CreateFromTask(async () =>
         {
             LicenseWindowViewModel = new LicenseWindowViewModel();
-            LoadLicenseData();
+            await LoadLicenseData();
         });
 
         Deactivate = ReactiveCommand.CreateFromTask(async () =>
         {
             await Zentitle.Instance.Activation.Deactivate();
             LicenseWindowViewModel = null;
-            LoadLicenseData();
+            await LoadLicenseData();
         });
 
         ShowConverter = ReactiveCommand.CreateFromTask(async () =>
         {
             LicenseWindowViewModel = null;
-            LoadLicenseData();
+            await LoadLicenseData();
         });
 
-        LoadLicenseData();
+        RxApp.MainThreadScheduler.Schedule(ScheduleLicenseDataLoad);
     }
 
-    private async void LoadLicenseData()
+    private async void ScheduleLicenseDataLoad()
     {
-        await Zentitle.Instance.TryPullRemoteState();
+        await LoadLicenseData();
+    }
+
+    private async System.Threading.Tasks.Task LoadLicenseData()
+    {
+
+        await Zentitle.Instance.Refresh();
+        Offline = Zentitle.Instance.Activation.Info.Mode == ActivationMode.Offline;
+        Online = Zentitle.Instance.Activation.Info.Mode == ActivationMode.Online;
         Activated = Zentitle.Instance.Activation.State == ActivationState.Active;
+        ActivationModeText = Zentitle.Instance.Activation.Info.Mode.ToString();
         ConverterViewModel.ReloadLicenseData();
         CompanyName = Zentitle.Instance.CompanyName;
         PlanName = Zentitle.Instance.PlanName;
         ExpiryDate = Zentitle.Instance.ExpiryDate;
+    }
+
+    public string? ActivationModeText
+    {
+        get => _activationModeText;
+        set => this.RaiseAndSetIfChanged(ref _activationModeText, value);
     }
 
     public bool Activated
@@ -87,13 +193,13 @@ public class MainWindowViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _activated, value);
     }
 
-    public string CompanyName
+    public string? CompanyName
     {
         get => _companyName;
         set => this.RaiseAndSetIfChanged(ref _companyName, value);
     }
 
-    public string PlanName
+    public string? PlanName
     {
         get => _planName;
         set => this.RaiseAndSetIfChanged(ref _planName, value);
@@ -105,7 +211,19 @@ public class MainWindowViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _expiryDate, value);
     }
 
-    public LicenseWindowViewModel LicenseWindowViewModel
+    public bool Online
+    {
+        get => _online;
+        set => this.RaiseAndSetIfChanged(ref _online, value);
+    }
+
+    public bool Offline
+    {
+        get => _offline;
+        set => this.RaiseAndSetIfChanged(ref _offline, value);
+    }
+
+    public LicenseWindowViewModel? LicenseWindowViewModel
     {
         get => _licenseWindowViewModel;
         set => this.RaiseAndSetIfChanged(ref _licenseWindowViewModel, value);

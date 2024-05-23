@@ -12,18 +12,12 @@ namespace ZentitleOnPremDemo.ViewModels
             OkButton = okButton;
             CancelButton = cancelButton;
 
-            Cancel = ReactiveCommand.Create(() =>
-            {
-                return new BoolResult(false);
-            });
+            Cancel = ReactiveCommand.Create(() => new BoolResult(false));
 
-            Ok = ReactiveCommand.Create(() =>
-            {
-                return new BoolResult(true);
-            });
+            Ok = ReactiveCommand.Create(() => new BoolResult(true));
         }
 
-        public string Message { get; private set; } = string.Empty;
+        public string Message { get; private set; }
         public bool OkButton { get; private set; }
         public bool CancelButton { get; private set; }
 

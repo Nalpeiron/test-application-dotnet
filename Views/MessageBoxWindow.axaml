@@ -3,7 +3,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:ZentitleOnPremDemo.ViewModels"
-        xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
         mc:Ignorable="d" d:DesignWidth="320" d:DesignHeight="135"
         Width="320" Height="135"
         x:Class="ZentitleOnPremDemo.Views.MessageBoxWindow"
@@ -16,7 +15,7 @@
   <Design.DataContext>
     <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-    <vm:ActivationViewModel/>
+    <vm:LicenseWindowViewModel/>
   </Design.DataContext>
   <Window.Styles>
     <Style Selector="Button.main">
@@ -39,7 +38,7 @@
       </ExperimentalAcrylicBorder.Material>
     </ExperimentalAcrylicBorder>
     <StackPanel>
-      <TextBlock Margin="15,15,15,20" Text="{Binding Message}" TextWrapping="Wrap"></TextBlock>
+      <TextBlock Margin="15,15,15,20" Height="60" TextAlignment="Center" Text="{Binding Message}" TextWrapping="Wrap"></TextBlock>
       <WrapPanel HorizontalAlignment="Center">
         <Button Classes="main" IsVisible="{Binding OkButton}" Command="{Binding Ok}" Margin="5,0,5,0">OK</Button>
         <Button IsVisible="{Binding CancelButton}" Command="{Binding Cancel}" Margin="5,0,5,0">Cancel</Button>

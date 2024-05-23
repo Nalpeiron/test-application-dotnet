@@ -5,6 +5,7 @@ using ZentitleOnPremDemo.ViewModels;
 using ZentitleOnPremDemo.Views;
 using System.Threading.Tasks;
 using ZentitleOnPremDemo.Zentitle;
+using AvaloniaWebView;
 
 namespace ZentitleOnPremDemo;
 
@@ -13,6 +14,13 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+    }
+
+    public override void RegisterServices()
+    {
+        base.RegisterServices();
+
+        AvaloniaWebViewBuilder.Initialize(default);
     }
 
     public override async void OnFrameworkInitializationCompleted()

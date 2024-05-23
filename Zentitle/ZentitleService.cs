@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -14,18 +15,16 @@ public static class Instance
     private const string CompanyAttributeKey = "Company";
     private const string PlanNameAttributeKey = "Plan";
     private const string ElementPoolKey = "Threads";
-    private const string ConsumptionTokenKey = "FilesToConvert";
+    private const string UsageCountTokenKey = "FilesToConvert";
 
-    private static readonly HttpClient HttpClient = new HttpClient(new SocketsHttpHandler
+    private static readonly HttpClient HttpClient = new(new SocketsHttpHandler
     {
         PooledConnectionLifetime = TimeSpan.FromMinutes(15) // Recreate every 15 minutes
     });
 
-    private static IActivation activation = CreateActivation();
-
     public static string CompanyName => GetAttributeValue(CompanyAttributeKey);
     public static string PlanName => GetAttributeValue(PlanNameAttributeKey);
-    public static DateTime? ExpiryDate => Activation.Info?.EntitlementExpiryDate?.ToLocalTime().DateTime;
+    public static DateTime? ExpiryDate => Activation.Info?.Entitlement?.EntitlementExpiry?.ToLocalTime().DateTime;
 
     private static string GetAttributeValue(string key)
     {
@@ -34,12 +33,12 @@ public static class Instance
 
     public static Exception? LastEncounteredException { get; private set; }
 
-    public static IActivation Activation => activation;
+    public static IActivation Activation { get; private set; } = CreateActivation();
 
     public static Task ReloadActivation()
     {
-        activation = CreateActivation();
-        return activation.Initialize();
+        Activation = CreateActivation();
+        return Activation.Initialize();
     }
 
     public static ActivationFeature GetElementPoolFeature()
@@ -48,15 +47,15 @@ public static class Instance
                new ActivationFeature(ElementPoolKey, FeatureType.ElementPool);
     }
 
-    public static ActivationFeature GetConsumptionToken()
+    public static ActivationFeature GetUsageCountFeature()
     {
-        return Activation.Features.Get(ConsumptionTokenKey) ??
-               new ActivationFeature(ConsumptionTokenKey, FeatureType.Consumption);
+        return Activation.Features.Get(UsageCountTokenKey) ??
+               new ActivationFeature(UsageCountTokenKey, FeatureType.UsageCount);
     }
 
-    public static Task<bool> CheckoutConsumptionToken(long amount = 1)
+    public static Task<bool> CheckoutUsageCountFeature(long amount = 1)
     {
-        return CheckoutFeature(ConsumptionTokenKey, amount);
+        return CheckoutFeature(UsageCountTokenKey, amount);
     }
 
     public static Task<bool> ReturnElementPoolFeature(long amount)
@@ -69,12 +68,24 @@ public static class Instance
         return CheckoutFeature(ElementPoolKey, amount);
     }
 
-    public static async Task<bool> TryPullRemoteState()
+    public static async Task<bool> Refresh()
     {
         try
         {
-            await Activation.PullRemoteState();
-            return true;
+            var result = false;
+            if (Activation.State == ActivationState.NotActivated || Activation.Info.Mode != ActivationMode.Online)
+                return result;
+
+            result = await Activation.RefreshLease();
+            if (result)
+            {
+                //Force to reload the state from the server.
+                //This is done for demonstration purposes only.
+                //In a real-world scenario, you would not need to do this so many times.
+                await Activation.PullRemoteState();
+            }
+
+            return result;
         }
         catch (Exception ex)
         {
@@ -82,7 +93,6 @@ public static class Instance
             return false;
         }
     }
-
 
     private static async Task<bool> CheckoutFeature(string key, long amount)
     {
@@ -112,15 +122,22 @@ public static class Instance
         }
     }
 
-    private static IActivation CreateActivation()
+    public static IActivation CreateActivation()
     {
         return new Activation(opt =>
         {
             opt.WithTenant(ZentitleOptions.TenantId)
                 .WithProduct(ZentitleOptions.ProductId)
+                .WithOfflineActivationSupport(
+                    offline => offline.UseTenantPublicKey(new JsonWebKey
+                    {
+                        Alg = "RSA",
+                        N = ZentitleOptions.TenantPublicKey,
+                        E = "AQAB"
+                    })
+                )
                 .WithSeatId(() => ZentitleOptions.SeatId);
-
-            opt.WithOnlineActivationSupport(onl => onl
+            opt.WithOnlineActivationSupport(online => online
                     .UseLicensingApi(new Uri(ZentitleOptions.ZentitleUrl))
                     .UseHttpClientFactory(() => HttpClient))
                 .UseStorage(new FileActivationStorage("persistentData.json"));

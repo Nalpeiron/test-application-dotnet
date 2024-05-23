@@ -1,0 +1,125 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:ZentitleOnPremDemo.ViewModels"
+        xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="460"
+        Width="500" Height="300"
+        x:Class="ZentitleOnPremDemo.Views.OfflineDeactivationWindow"
+        Title="Offline Activation Window"
+        Background="White"
+        TransparencyLevelHint="AcrylicBlur"
+        SystemDecorations="None"
+        Topmost="True"
+        WindowStartupLocation="CenterOwner">
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:OfflineDeactivationViewModel />
+    </Design.DataContext>
+    <Window.Styles>
+        <Style Selector="Button.main">
+            <Setter Property="Background" Value="#0078D7" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.main:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#429CE3" />
+            <Setter Property="TextBlock.Foreground" Value="White" />
+        </Style>
+        <Style Selector="TextBlock.message">
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="Margin" Value="0,10,0,10" />
+        </Style>
+        <Style Selector="TextBlock.error">
+            <Setter Property="Background" Value="Red" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="TextBlock.success">
+            <Setter Property="Background" Value="Green" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
+    </Window.Styles>
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="White"
+                    TintOpacity="1"
+                    MaterialOpacity="0.65" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+        <Panel
+            IsVisible="{Binding Loading}">
+            <progRing:ProgressRing
+                Width="80"
+                Height="80"
+                IsActive="True"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Foreground="#0078D7"
+                Margin="15" />
+        </Panel>
+        <Panel
+            VerticalAlignment="Center"
+            IsVisible="{Binding !Loading}"
+            Margin="20,0,20,0">
+            <StackPanel IsVisible="{Binding SuccessMessage, Converter={x:Static StringConverters.IsNullOrEmpty}}">
+                <TextBlock Text="{Binding ErrorMessage}"
+                           TextWrapping="Wrap"
+                           Classes="error message"
+                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                </TextBlock>
+                <TextBlock Text="{Binding InfoMessage}"
+                           TextWrapping="Wrap"
+                           Classes="success message"
+                           IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                </TextBlock>
+                <StackPanel
+                    IsVisible="{Binding DeactivationConfirmation, Converter={x:Static StringConverters.IsNullOrEmpty}}">
+                    <TextBlock Margin="0,0,0,10" TextWrapping="Wrap">Proceed to deactivate your license to generate a confirmation. Please note, this action cannot be undone.</TextBlock>
+                    <WrapPanel HorizontalAlignment="Right" Margin="0,0,0,20">
+                        <Button
+                            Classes="main" Margin="0,0,10,0"
+                            Command="{Binding Deactivate}">
+                            Deactivate offline
+                        </Button>
+                        <Button
+                            Command="{Binding Cancel}">
+                            Cancel
+                        </Button>
+                    </WrapPanel>
+                </StackPanel>
+                <StackPanel IsVisible="{Binding DeactivationConfirmation, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <TextBlock Margin="0,0,0,10" TextWrapping="Wrap">Download deactivation confirmation or copy it to clipboard then use it in End User Portal to deactivate your license.</TextBlock>
+                    <WrapPanel Margin="0,10,0,0" HorizontalAlignment="Right">
+                        <Button
+                            Classes="main" Margin="0,0,10,0"
+                            Command="{Binding SaveToFile}">
+                            Save to file
+                        </Button>
+                        <Button
+                            Classes="main" Margin="0,0,10,0"
+                            Command="{Binding CopyToClipboard}">
+                            Copy to clipboard
+                        </Button>
+
+                        <Button
+                            IsVisible="{Binding DeactivationConfirmation, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                            Command="{Binding Success}">
+                            Done
+                        </Button>
+                    </WrapPanel>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel IsVisible="{Binding SuccessMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Classes="message success" Margin="0,0,0,20" Text="{Binding SuccessMessage}"></TextBlock>
+                <WrapPanel HorizontalAlignment="Center">
+                    <Button Classes="main" Command="{Binding Success}">OK</Button>
+                </WrapPanel>
+            </StackPanel>
+        </Panel>
+    </Panel>
+</Window>

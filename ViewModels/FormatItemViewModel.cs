@@ -5,7 +5,7 @@ namespace ZentitleOnPremDemo.ViewModels;
 
 public class FormatItemViewModel : ViewModelBase
 {
-    public string Text
+    public string? Text
     {
         get => _text;
         set => this.RaiseAndSetIfChanged(ref _text, value);
@@ -35,7 +35,7 @@ public class FormatItemViewModel : ViewModelBase
         Value = value;
     }
 
-    private string _text;
+    private string? _text;
     private bool _enabled;
     private bool _selected;
     private EncodeFormat _value;

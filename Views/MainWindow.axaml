@@ -4,10 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="using:ZentitleOnPremDemo.Views"
-        xmlns:ic="using:FluentIcons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
         Width="900"
-        Height="750"
+        Height="780"
         x:Class="ZentitleOnPremDemo.Views.MainWindow"
         Icon="/Assets/logo.png"
         Title="Elevate Demo"
@@ -58,11 +57,17 @@
           <MenuItem Header="Converter" IsEnabled="{Binding Activated}" Command="{Binding ShowConverter}"></MenuItem>
         </Menu>
         <Menu DockPanel.Dock="Right" Classes="main">
-          <MenuItem Header="License">
-            <MenuItem Header="License info" IsVisible="{Binding Activated}" Command="{Binding ShowLicense}"></MenuItem>
+          <MenuItem Header="Activate license" IsVisible="{Binding !Activated}">
+            <MenuItem Header="Activation code" Command="{Binding SetActivationCode}"></MenuItem>
+            <MenuItem Header="Login with IDP" Command="{Binding IdpLogin}"></MenuItem>
+            <MenuItem Header="Username &amp; password" Command="{Binding UserLogin}"></MenuItem>
+            <MenuItem Header="Activate Offline" Command="{Binding ActivateOffline}"></MenuItem>
+          </MenuItem>
+          <MenuItem Header="License" IsVisible="{Binding Activated}">
+            <MenuItem Header="License info" Command="{Binding ShowLicense}"></MenuItem>
             <Separator IsVisible="{Binding Activated}"/>
-            <MenuItem Header="Activate" IsVisible="{Binding !Activated}" Command="{Binding SetActivationCode}"></MenuItem>
-            <MenuItem Header="Deactivate" IsVisible="{Binding Activated}" Command="{Binding Deactivate}"></MenuItem>
+            <MenuItem Header="Deactivate" IsVisible="{Binding Online}" Command="{Binding Deactivate}"></MenuItem>
+            <MenuItem Header="Deactivate Offline" IsVisible="{Binding Offline}" Command="{Binding DeactivateOffline}"></MenuItem>
           </MenuItem>
           <MenuItem Header="Configuration">
             <MenuItem Header="Edit" IsEnabled="{Binding !Activated}" Command="{Binding EditConfiguration}"></MenuItem>
@@ -76,10 +81,12 @@
         <TextBlock Classes="footer bold" Padding="5,0,0,0" DockPanel.Dock="Left" Text="{Binding CompanyName}" VerticalAlignment="Center"></TextBlock>
         <TextBlock IsVisible="{Binding ExpiryDate, Converter={x:Static ObjectConverters.IsNotNull}}" Classes="footer" Padding="10,0,0,0" DockPanel.Dock="Left" VerticalAlignment="Center">Expires: </TextBlock>
         <TextBlock IsVisible="{Binding ExpiryDate, Converter={x:Static ObjectConverters.IsNotNull}}" Classes="footer bold" Padding="5,0,0,0" DockPanel.Dock="Left" Text="{Binding ExpiryDate}" VerticalAlignment="Center"></TextBlock>
+        <TextBlock IsVisible="{Binding ExpiryDate, Converter={x:Static ObjectConverters.IsNotNull}}" Classes="footer" Padding="10,0,0,0" DockPanel.Dock="Left" VerticalAlignment="Center">Activation mode: </TextBlock>
+        <TextBlock IsVisible="{Binding ExpiryDate, Converter={x:Static ObjectConverters.IsNotNull}}" Classes="footer bold" Padding="5,0,0,0" DockPanel.Dock="Left" Text="{Binding ActivationModeText }" VerticalAlignment="Center"></TextBlock>
         <TextBlock Classes="footer bold" Padding="0,0,10,0" DockPanel.Dock="Right" Text="{Binding PlanName}" VerticalAlignment="Center"></TextBlock>
         <TextBlock Classes="footer" Padding="0,0,5,0" DockPanel.Dock="Right" VerticalAlignment="Center">Plan: </TextBlock>
-        <TextBlock Classes="footer bold" Padding="0,0,10,0" DockPanel.Dock="Right" Text="{Binding ConverterViewModel.ConsumptionTokens}" VerticalAlignment="Center"></TextBlock>
-        <TextBlock Classes="footer" Padding="0,0,5,0" DockPanel.Dock="Right" VerticalAlignment="Center">Files remaining: </TextBlock>
+        <TextBlock Classes="footer bold" Padding="0,0,10,0" DockPanel.Dock="Right" Text="{Binding ConverterViewModel.ConsumptionTokens}" IsVisible="{ Binding Online }" VerticalAlignment="Center"></TextBlock>
+        <TextBlock Classes="footer" Padding="0,0,5,0" DockPanel.Dock="Right" IsVisible="{ Binding Online }" VerticalAlignment="Center">Files remaining: </TextBlock>
       </DockPanel>
     </Border>
     <Panel IsVisible="{Binding LicenseWindowViewModel, Converter={x:Static ObjectConverters.IsNull}}" DockPanel.Dock="Top">
